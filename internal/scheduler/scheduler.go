@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,11 +12,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// ManualUpdate 手动触发更新
+// ManualUpdate 负责获取所有订阅仓库的最新发布信息
 func ManualUpdate() {
+	// 获取订阅的仓库列表
 	repos := repository.ListSubscriptions()
 
-	// 获取 GitHub 客户端
+	// 遍历每个仓库并获取其最新发布信息
+	for _, repo := range repos {
+		fetchLatestRelease(repo)
+	}
+}
+
+// fetchLatestRelease 获取仓库的最新发布版本信息
+func fetchLatestRelease(repo string) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
@@ -23,19 +32,29 @@ func ManualUpdate() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	for _, repo := range repos {
-		// 使用 go-github 库获取仓库事件
-		ownerRepo := splitRepo(repo)
-		events, _, err := client.Activity.ListRepositoryEvents(ctx, ownerRepo[0], ownerRepo[1], nil)
-		if err != nil {
-			logger.Error("Failed to fetch updates for repo:", repo, err)
-			continue
-		}
+	ownerRepo := splitRepo(repo)
 
-		logger.Info("Fetched updates for", repo, ":", events)
+	release, _, err := client.Repositories.GetLatestRelease(ctx, ownerRepo[0], ownerRepo[1])
+	if err != nil {
+		logger.Error("Failed to fetch latest release for repo:", repo, err)
+		return
 	}
+
+	// 汇总发布版本信息
+	report := fmt.Sprintf(
+		"Repository: %s\nLatest Release: %s\nTag: %s\nPublished At: %s\nURL: %s\n",
+		repo,
+		release.GetName(),
+		release.GetTagName(),
+		release.GetPublishedAt(),
+		release.GetHTMLURL(),
+	)
+
+	// 输出到终端或保存到文件
+	logger.Info(report)
 }
 
+// splitRepo 将 owner/repo 拆分为 owner 和 repo
 func splitRepo(repo string) []string {
 	return strings.Split(repo, "/")
 }
