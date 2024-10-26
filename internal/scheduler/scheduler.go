@@ -3,6 +3,7 @@ package scheduler
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,10 +34,17 @@ func (s *Scheduler) DailyProgress() {
 
 	for _, repo := range repos {
 		ownerRepo := splitRepo(repo)
-		issues, _ := s.githubClient.GetIssues(ownerRepo[0], ownerRepo[1])
-		pullRequests, _ := s.githubClient.GetPullRequests(ownerRepo[0], ownerRepo[1])
 
-		filename := fmt.Sprintf("%s_%s.md", repo, date)
+		// 设置文件路径，文件存放在 report/owner/repo_date.md
+		filename := fmt.Sprintf("report/%s_%s.md", repo, date)
+		dirPath := filepath.Dir(filename)
+
+		// 创建 report 目录及子目录
+		if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+			logger.Error("Failed to create directory for report file:", err)
+			continue
+		}
+
 		file, err := os.Create(filename)
 		if err != nil {
 			logger.Error("Failed to create report file:", err)
@@ -45,6 +53,8 @@ func (s *Scheduler) DailyProgress() {
 		defer file.Close()
 
 		// 写入 Issues 和 Pull Requests
+		issues, _ := s.githubClient.GetIssues(ownerRepo[0], ownerRepo[1])
+		pullRequests, _ := s.githubClient.GetPullRequests(ownerRepo[0], ownerRepo[1])
 		file.WriteString(fmt.Sprintf("# Daily Progress for %s\n\n## Issues\n", repo))
 		for _, issue := range issues {
 			file.WriteString(fmt.Sprintf("- %s (URL: %s)\n", issue.GetTitle(), issue.GetHTMLURL()))
@@ -83,10 +93,7 @@ func (s *Scheduler) fetchLatestRelease(repo string) string {
 
 // ManualUpdate 先更新 DailyProgress，然后生成并输出正式报告
 func (s *Scheduler) ManualUpdate() {
-	// 先生成最新的每日进展
 	s.DailyProgress()
-
-	// 然后生成正式报告
 	repos := repository.ListSubscriptions()
 	for _, repo := range repos {
 		s.GenerateDailyReport(repo)
@@ -96,7 +103,7 @@ func (s *Scheduler) ManualUpdate() {
 // GenerateDailyReport 读取每日进展文件并使用 LLM 生成正式日报告
 func (s *Scheduler) GenerateDailyReport(repo string) {
 	date := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf("%s_%s.md", repo, date)
+	filename := fmt.Sprintf("report/%s_%s.md", repo, date)
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		logger.Error("Failed to read progress file:", err)
@@ -109,7 +116,6 @@ func (s *Scheduler) GenerateDailyReport(repo string) {
 		return
 	}
 
-	// 输出到终端
 	fmt.Printf("=== Formal Report for %s ===\n%s\n", repo, report)
 }
 
