@@ -92,16 +92,16 @@ func (s *Scheduler) fetchLatestRelease(repo string) string {
 }
 
 // ManualUpdate 先更新 DailyProgress，然后生成并输出正式报告
-func (s *Scheduler) ManualUpdate() {
+func (s *Scheduler) ManualUpdate(dryRun bool) {
 	s.DailyProgress()
 	repos := repository.ListSubscriptions()
 	for _, repo := range repos {
-		s.GenerateDailyReport(repo)
+		s.GenerateDailyReport(repo, dryRun)
 	}
 }
 
 // GenerateDailyReport 读取每日进展文件并使用 LLM 生成正式日报告
-func (s *Scheduler) GenerateDailyReport(repo string) {
+func (s *Scheduler) GenerateDailyReport(repo string, dryRun bool) {
 	date := time.Now().Format("2006-01-02")
 	filename := fmt.Sprintf("report/%s_%s.md", repo, date)
 	content, err := os.ReadFile(filename)
@@ -110,7 +110,7 @@ func (s *Scheduler) GenerateDailyReport(repo string) {
 		return
 	}
 
-	report, err := s.llmClient.GenerateReport(string(content))
+	report, err := s.llmClient.GenerateReport(string(content), dryRun)
 	if err != nil {
 		logger.Error("Failed to generate report:", err)
 		return

@@ -15,7 +15,15 @@ func NewUpdateCommand() *UpdateCommand {
 }
 
 func (c *UpdateCommand) Execute(args []string) error {
+	dryRun := false
+	for _, arg := range args {
+		if arg == "dry-run" {
+			dryRun = true
+			break
+		}
+	}
+
 	// 调用 Scheduler 的 ManualUpdate 方法
-	c.scheduler.ManualUpdate()
+	c.scheduler.ManualUpdate(dryRun)
 	return nil
 }
