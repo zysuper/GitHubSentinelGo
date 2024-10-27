@@ -20,6 +20,7 @@ func main() {
 	registry.RegisterCommand("unsubscribe", &commands.UnsubscribeCommand{})
 	registry.RegisterCommand("list", &commands.ListCommand{})
 	registry.RegisterCommand("update", commands.NewUpdateCommand())
+	registry.RegisterCommand("update_by_range", commands.NewUpdateByRangeCommand())
 	registry.RegisterHelpCommand()
 
 	repl(registry)

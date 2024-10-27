@@ -24,6 +24,6 @@ func (c *UpdateCommand) Execute(args []string) error {
 	}
 
 	// 调用 Scheduler 的 ManualUpdate 方法
-	c.scheduler.ManualUpdate(dryRun)
+	c.scheduler.ManualUpdate(dryRun, "closed", 7)
 	return nil
 }

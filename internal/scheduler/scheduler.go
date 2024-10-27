@@ -28,9 +28,13 @@ func NewScheduler() *Scheduler {
 }
 
 // DailyProgress 获取项目 issues、pull requests 和最新发布信息，并导出成 Markdown 文件
-func (s *Scheduler) DailyProgress() {
+func (s *Scheduler) DailyProgress(state string, days int) {
 	repos := repository.ListSubscriptions()
 	date := time.Now().Format("2006-01-02")
+
+	// 计算时间范围
+	since := time.Now().AddDate(0, 0, -days)
+	until := time.Now()
 
 	for _, repo := range repos {
 		ownerRepo := splitRepo(repo)
@@ -52,9 +56,13 @@ func (s *Scheduler) DailyProgress() {
 		}
 		defer file.Close()
 
+		// 写入时间窗口信息
+		file.WriteString(fmt.Sprintf("# Daily Progress for %s\n\n", repo))
+		file.WriteString(fmt.Sprintf("**Time Window:** %s to %s\n\n", since.Format("2006-01-02"), until.Format("2006-01-02")))
+
 		// 写入 Issues 和 Pull Requests
-		issues, _ := s.githubClient.GetIssues(ownerRepo[0], ownerRepo[1])
-		pullRequests, _ := s.githubClient.GetPullRequests(ownerRepo[0], ownerRepo[1])
+		issues, _ := s.githubClient.GetIssues(ownerRepo[0], ownerRepo[1], state, since)
+		pullRequests, _ := s.githubClient.GetPullRequests(ownerRepo[0], ownerRepo[1], state, since)
 		file.WriteString(fmt.Sprintf("# Daily Progress for %s\n\n## Issues\n", repo))
 		for _, issue := range issues {
 			file.WriteString(fmt.Sprintf("- %s (URL: %s)\n", issue.GetTitle(), issue.GetHTMLURL()))
@@ -92,8 +100,9 @@ func (s *Scheduler) fetchLatestRelease(repo string) string {
 }
 
 // ManualUpdate 先更新 DailyProgress，然后生成并输出正式报告
-func (s *Scheduler) ManualUpdate(dryRun bool) {
-	s.DailyProgress()
+func (s *Scheduler) ManualUpdate(dryRun bool, state string, days int) {
+	s.DailyProgress(state, days)
+
 	repos := repository.ListSubscriptions()
 	for _, repo := range repos {
 		s.GenerateDailyReport(repo, dryRun)
@@ -117,6 +126,15 @@ func (s *Scheduler) GenerateDailyReport(repo string, dryRun bool) {
 	}
 
 	fmt.Printf("=== Formal Report for %s ===\n%s\n", repo, report)
+
+	// 将报告保存到文件
+	reportFilename := fmt.Sprintf("report/%s_%s_report.md", repo, date)
+	err = os.WriteFile(reportFilename, []byte(report), 0644)
+	if err != nil {
+		logger.Error("Failed to save report to file:", err)
+	} else {
+		logger.Info(fmt.Sprintf("Formal report saved to %s", reportFilename))
+	}
 }
 
 // splitRepo 将 owner/repo 拆分为 owner 和 repo

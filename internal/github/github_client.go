@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/google/go-github/v50/github"
 	"golang.org/x/oauth2"
@@ -23,8 +24,14 @@ func NewGitHubClient() *GitHubClient {
 }
 
 // GetIssues 获取项目的 issues
-func (c *GitHubClient) GetIssues(owner, repo string) ([]*github.Issue, error) {
-	issues, _, err := c.client.Issues.ListByRepo(context.Background(), owner, repo, nil)
+func (c *GitHubClient) GetIssues(owner, repo string, state string, since time.Time) ([]*github.Issue, error) {
+	options := &github.IssueListByRepoOptions{
+		State:     state,
+		Since:     since,
+		Sort:      "updated",
+		Direction: "desc",
+	}
+	issues, _, err := c.client.Issues.ListByRepo(context.Background(), owner, repo, options)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +39,14 @@ func (c *GitHubClient) GetIssues(owner, repo string) ([]*github.Issue, error) {
 }
 
 // GetPullRequests 获取项目的 pull requests
-func (c *GitHubClient) GetPullRequests(owner, repo string) ([]*github.PullRequest, error) {
-	pullRequests, _, err := c.client.PullRequests.List(context.Background(), owner, repo, nil)
+func (c *GitHubClient) GetPullRequests(owner, repo string, state string, since time.Time) ([]*github.PullRequest, error) {
+	options := &github.PullRequestListOptions{
+		State:     state,
+		Sort:      "updated",
+		Direction: "desc",
+		Base:      "main",
+	}
+	pullRequests, _, err := c.client.PullRequests.List(context.Background(), owner, repo, options)
 	if err != nil {
 		return nil, err
 	}
