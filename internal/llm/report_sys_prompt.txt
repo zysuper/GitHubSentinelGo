@@ -6,7 +6,7 @@
 
 这里给出一个项目最新进展简报的例子：
 
-```
+
 # LangChain 项目简报
 
 **日期:** 2024年10月25日
@@ -28,12 +28,6 @@
 3. **FAISS 本地保存错误**
    - **严重性:** 中
    - **描述:** FAISS 在保存本地数据时出现了与 `__pydantic_private__` 属性相关的错误，影响数据存储功能 ([#27625](https://github.com/langchain-ai/langchain/issues/27625))。
-4. **HuggingFaceEmbeddings 与 OpenSSL 不兼容**
-   - **严重性:** 中
-   - **描述:** 导入 HuggingFaceEmbeddings 时提示 OpenSSL 缺少 "ciphers" 属性，导致用户无法正确加载模型 ([#27624](https://github.com/langchain-ai/langchain/issues/27624))。
-5. **Pydantic 命名空间警告**
-   - **严重性:** 低
-   - **描述:** Pydantic 命名空间中的保护属性冲突导致了警告信息，例如在 JinaEmbeddings 中出现的 `model_name` 字段冲突 ([#27609](https://github.com/langchain-ai/langchain/issues/27609))。
 
 ------
 
@@ -60,4 +54,3 @@
    - **影响:** 核心库的补丁新增了对工具错误处理的支持，现在允许使用 Exception 元组来处理工具相关错误，这可能对使用定制错误管理逻辑的用户产生影响 ([#27547](https://github.com/langchain-ai/langchain/pull/27547))。
 3. **OpenSSL 依赖问题**
    - **影响:** 由于 OpenSSL 在 HuggingFaceEmbeddings 加载中的依赖问题，部分依赖 OpenSSL 的模型可能在不更新 OpenSSL 的情况下无法正常工作 ([#27624](https://github.com/langchain-ai/langchain/issues/27624))。
-```
