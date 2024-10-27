@@ -1,6 +1,6 @@
 # GitHub Sentinel Go
 
-GitHub Sentinel Go 是一个开源的 CLI 工具，专为开发者和项目管理人员设计。它能够自动获取并汇总订阅的 GitHub 仓库的最新动态。通过这个工具，您可以轻松跟踪多个项目的进展，及时响应仓库更新事件，提升团队协作效率。
+GitHub Sentinel Go 是一款开源工具类 AI Agent，专为开发者和项目管理人员设计，能够定期自动获取并汇总订阅的 GitHub 仓库最新动态。其主要功能包括订阅管理、更新获取、通知系统、报告生成。
 
 ## 特性
 
@@ -9,32 +9,25 @@ GitHub Sentinel Go 是一个开源的 CLI 工具，专为开发者和项目管�
 - **事件查看**：通过 CLI 立即查看订阅仓库的最新活动。
 - **使用 go-github 库**：依赖 GitHub 官方 API 客户端库 `go-github`。
 
-## 安装
+## 安装与使用
 
-### 克隆项目
-首先，克隆项目代码：
-```bash
-git clone https://github.com/zysuper/github-sentinel-go.git
-cd github-sentinel-go
+1. 克隆仓库：`git clone https://github.com/zysuper/github-sentinel-go.git`
+2. 安装依赖：`go mod tidy`
+3. 构建可执行文件：
+   - CLI 可执行文件：`go build -o github-sentinel-cli cmd/cli/main.go`
+   - 定时任务可执行文件：`go build -o github-sentinel-scheduler cmd/scheduler/main.go`
+4. 设置 GitHub 和 OpenAI API 的访问令牌：
+   ```bash
+   export GITHUB_TOKEN=your_github_token_here
+   export OPENAI_API_KEY=your_openai_api_key_here
+   ```
+5. 启动 REPL 模式的 CLI：`./github-sentinel-cli`
+6. 启动定时任务模式：
+   ```bash
+   ./github-sentinel-scheduler -days 7 -interval 24h
+   ```
 
-
-```
-
-确保已经安装 Go 1.20 及以上版本，然后运行以下命令来安装依赖：
-
-```bash
-go mod tidy
-```
-
-### 编译项目
-
-使用以下命令编译 CLI 工具：
-
-```bash
-go build -o github-sentinel cmd/main.go
-```
-
-### 运行 CLI
+#### 运行 CLI 模式
 
 编译完成后，您可以通过以下命令来运行工具并进入交互式 REPL 环境：
 
@@ -51,7 +44,7 @@ go build -o github-sentinel cmd/main.go
 - `help`：显示可用命令列表。
 - `exit`：退出 REPL 环境。
 
-#### 示例
+##### 示例
 
 ```
 > subscribe octocat/Hello-World
@@ -65,16 +58,16 @@ Subscribed repositories:
 Fetching updates...
 ```
 
-## 如何配置项目
+#### 定时任务模式：
+
+`./github-sentinel-scheduler -days 30 -interval 1h`
+
+抓取过去 30 天的更新，每小时自动更新一次。
 
 
 
 ### 配置环境变量
 
-在开始使用 GitHub Sentinel Go 之前，请确保已设置 GitHub 访问令牌。您可以通过 `GITHUB_TOKEN` 环境变量指定 GitHub API 访问令牌。
-
-```
-export GITHUB_TOKEN=your_github_token_here
-```
+在开始使用 GitHub Sentinel Go 之前，请确保已设置 GitHub 访问令牌。
 
 您可以在 GitHub [Personal Access Tokens](https://github.com/settings/tokens) 页面创建一个新的令牌，并将其存储为环境变量。令牌需要具备读取仓库的权限。
